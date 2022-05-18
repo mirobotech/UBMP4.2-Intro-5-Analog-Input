@@ -3,9 +3,9 @@
  Date: April 2, 2022
  
  Simple 9600 bits-per-second (bps) serial output example function. Sets up 
- header H1 for RS-232-style serial data output and writes bits by 'bit-banging'
+ header H1 for RS-232-style serial data output and writes bits by manipulating
  the port pin in software instead of using the built-in hardware EUSART (the 
- EUSART pin is not available on the UBMP4.2 header pins).
+ EUSART's TX and RX pins are not available on the UBMP4.2 header pins).
  
  Serial output is useful for monitoring data using a logic analyzer or by using
  an oscilloscope with a serial decode function. Serial output can also be used

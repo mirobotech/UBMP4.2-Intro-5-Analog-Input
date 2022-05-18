@@ -66,7 +66,7 @@ int main(void)
     // Enable PORTC output except for phototransistor Q1 and IR receiver U2
     TRISC = 0b00001100;
     
-    // If Q1 and U2 are not installed, all PORTC outputs can be enabled
+    // If Q1 and U2 are not installed, all PORTC outputs can be enabled instead
     // TRISC = 0b00000000;
     
     // Enable on-die temperature sensor and set high operating Vdd range
@@ -77,7 +77,7 @@ int main(void)
     // Wait the recommended acquisition time before A-D conversion
     __delay_us(200);
     
-    // Select Q1 phototransistor as ADC input (if installed)
+    // Select Q1 phototransistor as ADC input (can be enabled if Q1 is installed)
     // ADC_select_channel(ANQ1);
     
     while(1)
@@ -114,7 +114,7 @@ int main(void)
  *      in the main() function change the function of the PORTC I/O pins?
  * 
  * 2.   This program converts an analog input to a digital value representing
- *      the input and outputs the digital bits to the PORTC pins connected to
+ *      the input, and outputs the digital bits to the PORTC pins connected to
  *      the UBMP4 header pins. A voltmeter can be used to read the result on
  *      the H1-H8 pins, except for H3 and H4. H3 and H4 have been set as inputs
  *      in this program since they connect to Q1 (an ambient light sensor or
@@ -139,13 +139,14 @@ int main(void)
  *      header pins is: LATC = rawADC;
  * 
  *      Since the upper 4 bits of PORTC are also physically connected to LEDs
- *      D2-D5, they will light up to show these four data bits as well. Does
- *      their value match your result, above?
+ *      D2-D5, they will light up to show these first four data bits as well.
+ *      Does their value match your result, above?
  * 
  *      The lower 4 bits of the result can be displayed instead of the upper 4
  *      bits by shifting the contents of the ADC conversion result left,
- *      essentially sliding each bit 4 positions. The upper 4 bits will be lost
- *      during this operation, and will be replaced by the lower 4 bits.
+ *      essentially sliding each bit 4 positions to its left. The upper 4 bits
+ *      will be lost during this operation, and will be replaced by the lower
+ *      4 bits.
  * 
  *      Update the LATC statement to match the statement, below. Rebuild the
  *      program and run it again.
@@ -154,13 +155,13 @@ int main(void)
  * 
  *      The least significant bits will be the ones that change most often. If
  *      you are using the built-in temperature sensor, try heating the micro-
- *      controller with your touch, or by cradling the circuit board until you
- *      see one or more bit changes indicated on the LEDs.
+ *      controller with your touch, or by cradling the circuit board in your
+ *      hands until you see one or more bit changes indicated on the LEDs.
  * 
  * 4.   The PIC16F1459 microcontroller has 9 analog inputs shared with its
  *      digital I/O pins. Pins used for analog input must be explicity enabled
- *      as both input pins and analog pins. Describe how this is this done by
- *      the ADC_config() function.
+ *      as both input pins and analog pins. Describe how the ADC_config()
+ *      function configures the Q1 pin for analog input.
  * 
  * 5.   The single ADC (analog-to-digital coverter) in the PIC16F1459 uses an
  *      input multiplexer (mux) to switch one analog input at a time to the ADC.
@@ -171,7 +172,7 @@ int main(void)
  * 
  *      selects the microcontroller's on-board Temperature Indicator Module
  *      (ANTIM) as the ADC input. What other inputs are available? (Hint: see
- *      the UBMP410.h file)
+ *      the UBMP420.h file)
  * 
  *      The ADC_select_channel() function does not add a delay after switching
  *      a new input to the ADC, but there is another function that switches
@@ -187,7 +188,7 @@ int main(void)
  *      These functions enable the program to output RS-232 formatted serial
  *      data on the H1 header pin. This allows a logic analyser or oscilloscope
  *      to be used to read the value of the serial data more conveniently and
- *      quickly than by successivley probing each of the header pinsn with a
+ *      quickly than by successivley probing each of the header pins using a
  *      voltmeter.
  * 
  *      The format of the serial data is straightforward to understand. When no
@@ -203,8 +204,8 @@ int main(void)
  *      respectively, and each bit remains at its level for the entire bit
  *      duration (this is known as NRZ, or non-return-to-zero format). The bit
  *      duration is a reciprocal of the data rate. For example at 9600 bps
- *      (bits-per-second), each bit would be 1/9600s, or roughly 104us
- *      (microseconds) in length.
+ *      (bits-per-second), each bit is 1/9600s, or roughly 104us (microseconds)
+ *      in length.
  * 
  *      If you have access to an oscilloscope or logic analyzer, add the
  *      following code to the program (below the LATC output statement) to
@@ -213,8 +214,8 @@ int main(void)
         // Write ADC result to H1 as binary serial data
         H1_serial_write(rawADC);
         
- *      Can you record or capture the serial data? What is the analogue value
- *      that was transmitted?
+ *      Can you record or capture the digital serial data? What is the analogue
+ *      value that it transmitted?
  * 
  * 8.   Rather than interpreting or converting the analogue value yourself, this
  *      next block of code can be added to your program to convert the analog
@@ -245,7 +246,7 @@ int main(void)
  * 10.  The data transmission loop of the H1_serial_write() function is shown
  *      below:
  * 
-     // Shift 8 data bits out LSB first
+    // Shift 8 data bits out LSB first
     for(unsigned char bits = 8; bits != 0; bits--)
     {
         if((data & 0b00000001) == 0)    // Check the least significant bit state
@@ -271,39 +272,45 @@ int main(void)
  * 
  * 1.   The bin_to_dec() function converts a single byte into three decimal
  *      digits. Step 8 in the program analysis activities, above, converted
- *      these digits to ASCII. Can you make a bin_to_ASCII() function that
- *      would eliminate the need for you to offset the values to ASCII yourself?
+ *      each of these numeric digits to the ASCII code representing the digit.
+ *      Can you make a bin_to_ASCII() function that would eliminate the need
+ *      for you to offset the values to ASCII separately, as was done here?
  * 
- * 2.   Does your UBMP4 have Q1 installed? If it does, it will be easier to use
- *      Q1 as an input device instead of the temperature module. Q1 can either
- *      be an ambient light sensor, which is sensitive to visible light, or a
- *      phototransistor, sensitive to infrared (IR) wavelengths. Try using your
- *      phone's flashlight to illuminate Q1.
+ * 2.   Does your UBMP4 have Q1 installed? If installed, it will be easier to
+ *      use Q1 as an input device instead of the temperature module. Q1 can
+ *      either be an ambient light sensor, which is sensitive to visible light,
+ *      or a phototransistor, sensitive to infrared (IR) wavelengths. Try using
+ *      your phone's flashlight (ambient light sensor) or an infrared LED to
+ *      illuminate Q1.
  * 
  *      Create a program to implement threshold detection. Determine the analog
- *      level in one state and use conditional code to light an LED when the
- *      level rises or falls beyond a threshold you set.
+ *      level when Q1 senses low light and again when Q1 senses bright light.
+ *      Use conditional code to light an LED when the Q1 light level rises or
+ *      falls beyond a threshold set in your program.
  * 
  * 3.   Create a program that produces a PWM output proportional to an analog
  *      input, or a program that creates a tone having a pitch proportional
  *      to an analog input value.
  * 
  * 4.   If you have an oscilloscope available, investigate how fast you get the
- *      serial output to transmit. Try setting the bit delays in the serial
+ *      serial output to transmit. Try setting the bit delays inside the serial
  *      write function to 1 microsecond of delay, instead of 104 and 103. Does
  *      it work the way it should? Is each bit 1us long? What do you think is
  *      happening?
  * 
  * 5.   Creating a function to transmit serial data is relatively straight-
- *      forward. Think about how you would create a function to receive serial
- *      data instead. How could you ensure that the data is received correctly
- *      even if there are slight timing differences between the transmitting
- *      and receiving devices?
+ *      forward. Receiving serial data reliably is similar, but should take
+ *      into account slight timing differences between the transmitter and 
+ *      receiver. Think about how you would create a function to receive serial
+ *      data. How could you ensure that the data is received correctly even if
+ *      there are slight timing differences between the transmitting and
+ *      receiving devices? Create the pseudocode or a flowchart describing a
+ *      serial receive function.
  * 
  * 6.   Transmitting serial data involves isolating each bit of a variable to
- *      be sent using bit-wise logical operators and bit-shifting the remaining
+ *      be sent using bit-wise logical operators, and bit-shifting the remaining
  *      data from within a loop. Received serial data can be assembled into an
  *      8-bit variable using a similar technique. Try to create a function or
- *      just the main loop of code that would successively read a digital input
- *      pin and assemble the values into an 8-bit variable.
+ *      just the main loop of code that would successively read serial data
+ *      from an input pin and assemble the values into an 8-bit variable.
  */
