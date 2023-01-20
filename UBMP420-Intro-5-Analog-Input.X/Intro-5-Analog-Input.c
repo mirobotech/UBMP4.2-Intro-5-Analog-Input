@@ -1,6 +1,6 @@
 /*==============================================================================
- Project: Intro-5-Analog-Input
- Date:    April 2, 2022
+ Project: Intro-5-Analog-Input          Activity: mirobo.tech/ubmp4-intro-1
+ Date:    January 20, 2023
  
  This program demonstrates the use of analog input, number conversion, and
  serial output functions using an external serial function library. (Serial
