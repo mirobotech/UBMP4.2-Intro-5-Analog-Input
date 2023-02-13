@@ -1,9 +1,10 @@
 /*==============================================================================
  Project: Intro-5-Analog-Input          Activity: mirobo.tech/ubmp4-intro-5
- Date:    January 20, 2023
+ Date:    February 13, 2023
  
- This program demonstrates the use of analog input, number conversion, and
- serial output functions using an external serial function library. (Serial
+ This introductory programming activity for the mirobo.tech UBMP4 demonstrates
+ an example use of analog input, number base conversion, and serial output
+ functions making use of a simple, external serial function library. (Serial
  output is useful for debugging when using a logic analyzer, or an oscilloscope
  with a serial decode function.)
  
