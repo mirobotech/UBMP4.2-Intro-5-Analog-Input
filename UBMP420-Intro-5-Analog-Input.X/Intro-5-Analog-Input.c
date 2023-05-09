@@ -1,16 +1,15 @@
 /*==============================================================================
  Project: Intro-5-Analog-Input          Activity: mirobo.tech/ubmp4-intro-5
- Date:    February 13, 2023
+ Date:    May 9, 2023
  
  This introductory programming activity for the mirobo.tech UBMP4 demonstrates
- an example use of analog input, number base conversion, and serial output
- functions making use of a simple, external serial function library. (Serial
- output is useful for debugging when using a logic analyzer, or an oscilloscope
- with a serial decode function.)
+ analog input, number base conversion, and the use of a simple, external serial
+ output function library. (Serial output is a useful technique for debugging
+ using a logic analyzer, or digital oscilloscope with a serial decode function.)
  
  Additional program analysis activities investigate the analog constants and
  input functions in the UBMP420.h and UBMP420.c files, as well as explore
- bit-wise AND operations for clearing and testing bits.
+ bit-wise AND operations for selectively clearing and testing bits.
 ==============================================================================*/
 
 #include    "xc.h"              // Microchip XC8 compiler include file
@@ -42,13 +41,13 @@ void bin_to_dec(unsigned char bin)
     dec1 = 0;               // Clear tens digit
     dec2 = 0;               // Clear hundreds digit
     
-    // Count hundreds
+    // Count hundreds digits in dec2 variable
     while(dec0 >= 100)
     {
         dec2 ++;
         dec0 = dec0 - 100;
     }
-    // Count tens, dec0 will contain ones when done
+    // Count tens digits in dec1 variable, dec0 will contain remaining ones
     while(dec0 >= 10)
     {
         dec1 ++;
@@ -64,21 +63,22 @@ int main(void)
     ADC_config();               // Configure ADC and enable input on Q1
     H1_serial_config();         // Prepare for serial output on H1
         
-    // Enable PORTC output except for phototransistor Q1 and IR receiver U2
+    // Enable PORTC output except for phototransistor Q1 and IR receiver U2 pins
     TRISC = 0b00001100;
     
-    // If Q1 and U2 are not installed, all PORTC outputs can be enabled instead
+    // If Q1 and U2 are not installed, all PORTC outputs can be enabled by
+    // uncommenting the line below:
     // TRISC = 0b00000000;
     
     // Enable on-die temperature sensor and set high operating Vdd range
     FVRCON = FVRCON | 0b00110000;
     
-    // Select the on-die temperature indicator module as ADC input
+    // Select the on-die temperature indicator module as ADC input and wait
+    // for the recommended acquisition time before A-D conversion
     ADC_select_channel(ANTIM);
-    // Wait the recommended acquisition time before A-D conversion
     __delay_us(200);
     
-    // Select Q1 phototransistor as ADC input (can be enabled if Q1 is installed)
+    // Select Q1 phototransistor as ADC input (can be selected if Q1 is installed)
     // ADC_select_channel(ANQ1);
     
     while(1)
@@ -101,10 +101,10 @@ int main(void)
 
 /* Learn More -- Program Analysis Activities
  * 
- * 1.   The TRISC register is originally set by the UBMP4_config() function, and
- *      is used to control the data direction (input, or output) of the PORTC
+ * 1.   The TRISC register is originally configured by the UBMP4_config()
+ *      function, controls the data direction (input or output) of the PORTC
  *      I/O pins. A value of 0 in any TRIS register bit position configures the
- *      pin to be an output (0 is like 'o', for output), while a value of 1 sets
+ *      pin to be an output (0 is like 'o', in output), while a value of 1 sets
  *      the pin as an input (1 is like 'i', in input).
  * 
  *      What is the original value of TRISC set in UBMP4_config? How does the
@@ -114,83 +114,89 @@ int main(void)
  * 
  *      in the main() function change the function of the PORTC I/O pins?
  * 
- * 2.   This program converts an analog input to a digital value representing
- *      the input, and outputs the digital bits to the PORTC pins connected to
- *      the UBMP4 header pins. A voltmeter can be used to read the result on
- *      the H1-H8 pins, except for H3 and H4. H3 and H4 have been set as inputs
- *      in this program since they connect to Q1 (an ambient light sensor or
- *      phototransistor) and U2 (an IR demodulator).
+ * 2.   This program converts an analog input into a digital value representing
+ *      the input, and then outputs the digital value to the UBMP4 PORTC header
+ *      pins. A voltmeter can be used to read the result on the H1-H8 header
+ *      pins, except for pins H3 and H4. H3 and H4 have been set as inputs
+ *      in this program since they connect to input devices Q1 (an ambient
+ *      light sensor or phototransistor) and U2 (the IR demodulator).
  * 
- *      If your UBMP4 has Q1 and U2 installed, leave the TRISC register as set,
+ *      If your UBMP4 has Q1 and U2 installed leave the TRISC register as set,
  *      above. If Q1 and U2 are not installed, the TRISC register can be set to
- *      output on digital data on all of the header pins by changing it to:
+ *      output digital data on all of the header pins by clearing it using:
  
     TRISC = 0b00000000;
  
  *      Read the conversion result by connecting a voltmeter between ground (the
- *      header pin closest to the circuit board edge -- marked with a ground
+ *      header pin closest to the circuit board edge, and marked by a ground
  *      symbol near the H1 legend) and each header signal pin (the header pin
- *      closest to the resistors -- marked with a pulse symbol).
+ *      closest to the resistors, marked by a pulse symbol).
  * 
- *      H1 is the least significant bit of the result, and H8 is the most
+ *      H8 is the most significant bit of the result, and H1 is the least
  *      significant bit. Starting at H8, record all 8 bits of the analog
- *      value, representing 5V as 1, and 0V as 0. What was your result?
+ *      value, representing 5V as 1, and 0V as 0. What was your binary result?
+ *      What is it converted to decimal?
  * 
  * 3.   The statement that outputs the digital value of the analog input to the
  *      header pins is: LATC = rawADC;
  * 
  *      Since the upper 4 bits of PORTC are also physically connected to LEDs
- *      D2-D5, they will light up to show these first four data bits as well.
- *      Does their value match your result, above?
+ *      D2-D5, the LEDs will light to represent these first four data bits as
+ *      well. Does their value match your result, above?
  * 
  *      The lower 4 bits of the result can be displayed instead of the upper 4
- *      bits by shifting the contents of the ADC conversion result left,
- *      essentially sliding each bit 4 positions to its left. The upper 4 bits
- *      will be lost during this operation, and will be replaced by the lower
- *      4 bits.
+ *      bits by using a bitshift operator to move the contents of the ADC
+ *      conversion result four bits to the left before outputting the value to
+ *      LATC. This essentially slides each bit four positions to its left. The
+ *      upper 4 bits will be lost during this shift operation, as they are
+ *      replaced by the lower 4 bits of the result, and the lowest four bits
+ *      will be 'empty' or 0.
  * 
- *      Update the LATC statement to match the statement, below. Rebuild the
- *      program and run it again.
+ *      Update the LATC expression to add the bitshift operator, below. Rebuild
+ *      the program and run it again.
  * 
-        LATC = rawADC << 4;     // Shift result 4 bits to show low nybble on LEDs
+        LATC = rawADC << 4;     // Shift result 4 bits left to display low nybble
  * 
- *      The least significant bits will be the ones that change most often. If
- *      you are using the built-in temperature sensor, try heating the micro-
- *      controller with your touch, or by cradling the circuit board in your
- *      hands until you see one or more bit changes indicated on the LEDs.
+ *      The least significant bits of a conversion result will change the most
+ *      often. If you are using the built-in temperature sensor as the input,
+ *      try heating the microcontroller with your touch, or by cradling the
+ *      circuit board in your hands until you see one or more bits changing 
+ *      on the LEDs.
  * 
  * 4.   The PIC16F1459 microcontroller has 9 analog inputs shared with its
  *      digital I/O pins. Pins used for analog input must be explicity enabled
- *      as both input pins and analog pins. Describe how the ADC_config()
- *      function configures the Q1 pin for analog input.
+ *      as both input pins and analog pins. Examine the ADC_config() function
+ *      and explain how it configures the Q1 pin for analog input.
  * 
- * 5.   The single ADC (analog-to-digital coverter) in the PIC16F1459 uses an
- *      input multiplexer (mux) to switch one analog input at a time to the ADC.
- *      After changing the input, a short delay is necessary to allow the input
- *      potential to settle before the conversion starts. The function call:
+ * 5.   The 9 analog inputs in the PIC16F1459 can be connected into the single
+ *      ADC (analog-to-digital coverter) one at a time through an analog
+ *      multiplexer (or mux). After changing to a different input, a short delay
+ *      is necessary to allow the input potential to 'settle' (by charging an
+ *      internal capacitor to the input voltage) before the conversion starts.
+ *      The function call:
  * 
         ADC_select_channel(ANTIM);
  * 
  *      selects the microcontroller's on-board Temperature Indicator Module
- *      (ANTIM) as the ADC input. What other inputs are available? (Hint: see
- *      the UBMP420.h file)
+ *      (ANTIM) as the ADC input, but does not add a settling delay. What other
+ *      analog inputs are available on UBMP4? (Hint: see the UBMP420.h file)
  * 
  *      The ADC_select_channel() function does not add a delay after switching
  *      a new input to the ADC, but there is another function that switches
  *      inputs, adds a delay, and performs the analog to digital conversion.
- *      What is this function called? Why do you think it is not used here?
+ *      What is this function called? Why do you think it was not used in this
+ *      program?
  * 
  * 6.   This program contains the bin_to_dec() function, which demonstrates a
  *      simple method of converting an 8-bit binary value to three decimal
- *      digits. Can you determine how it works? Explain, or use a flow chart
+ *      digits. Can you figure out how it works? Explain, or use a flow chart
  *      to describe its operation.
  * 
  * 7.   Two serial data functions are included in the Simple-Serial.c file.
  *      These functions enable the program to output RS-232 formatted serial
  *      data on the H1 header pin. This allows a logic analyser or oscilloscope
- *      to be used to read the value of the serial data more conveniently and
- *      quickly than by successivley probing each of the header pins using a
- *      voltmeter.
+ *      to read the value of the serial data more conveniently and quickly than
+ *      by successivley probing each of the header pins using a voltmeter.
  * 
  *      The format of the serial data is straightforward to understand. When no
  *      data is being transmitted, the serial line is 'idle', represented by a
@@ -201,12 +207,12 @@ int main(void)
  *      (least-significant bit) to MSB (most-significant bit). The transmission
  *      is ended with a logic 1 level Stop bit.
  * 
- *      The data bits, 0 or 1, are transmitted at a low or high voltage level,
- *      respectively, and each bit remains at its level for the entire bit
+ *      Each data bit, 0 or 1, is transmitted at a low or high voltage level,
+ *      respectively, and each bit remains at its logic level for the entire bit
  *      duration (this is known as NRZ, or non-return-to-zero format). The bit
- *      duration is a reciprocal of the data rate. For example at 9600 bps
- *      (bits-per-second), each bit is 1/9600s, or roughly 104us (microseconds)
- *      in length.
+ *      duration is a reciprocal of the data rate. For example at the commonly-
+ *      used 9600 bps (bits-per-second) data rate, each bit is 1/9600s, or
+ *      roughly 104us (microseconds) in length.
  * 
  *      If you have access to an oscilloscope or logic analyzer, add the
  *      following code to the program (below the LATC output statement) to
@@ -215,16 +221,17 @@ int main(void)
         // Write ADC result to H1 as binary serial data
         H1_serial_write(rawADC);
         
- *      Can you record or capture the digital serial data? What is the analogue
- *      value that it transmitted?
+ *      Can you record or capture the digital serial data? What is the digital 
+ *      equivalent of the analogue value that was transmitted?
  * 
  * 8.   Rather than interpreting or converting the analogue value yourself, this
  *      next block of code can be added to your program to convert the analog
- *      result to three decimal digits, display each of the digits in ASCII
- *      format, and add the character codes signifying the end of a line of 
- *      text (CR) and the start of a new line of text (LF). Logic analysers or
- *      digital oscilloscopes may be able to decode these digits, or the output
- *      could be connected to a serial terminal to display the text.
+ *      result to three decimal digits, transmit each of the digits serially as
+ *      ASCII characters, and add the character codes signifying the end of a
+ *      line of text (CR) and the start of a new line of text (LF). Logic
+ *      analysers or digital oscilloscopes may be able to decode these digits,
+ *      or the output can also be connected to a serial terminal to display the
+ *      text on screen.
  
         // Convert ADC result to decimal and write each digit serially in ASCII
         bin_to_dec(rawADC);
@@ -266,7 +273,7 @@ int main(void)
  *      the state of the least significant data bit.
  * 
  *      After the least significant data bit is transmitted, how are the other
- *      bits in the data byte isolated and transmitted?
+ *      seven bits in the data byte isolated and transmitted?
  *      
  * 
  * Programming Activities
@@ -277,41 +284,46 @@ int main(void)
  *      Can you make a bin_to_ASCII() function that would eliminate the need
  *      for you to offset the values to ASCII separately, as was done here?
  * 
- * 2.   Does your UBMP4 have Q1 installed? If installed, it will be easier to
- *      use Q1 as an input device instead of the temperature module. Q1 can
+ * 2.   Does your UBMP4 have Q1 installed? If Q1 is installed, it will be easier
+ *      to use Q1 as an input device instead of the temperature module. Q1 can
  *      either be an ambient light sensor, which is sensitive to visible light,
  *      or a phototransistor, sensitive to infrared (IR) wavelengths. Try using
  *      your phone's flashlight (ambient light sensor) or an infrared LED to
  *      illuminate Q1.
  * 
- *      Create a program to implement threshold detection. Determine the analog
- *      level when Q1 senses low light and again when Q1 senses bright light.
- *      Use conditional code to light an LED when the Q1 light level rises or
- *      falls beyond a threshold set in your program.
+ *      Create a program to implement threshold detection and to light an LED
+ *      when that threshold is crossed. Start by determining the analog level
+ *      corresponding to low intensities of light and the level representing
+ *      bright light. Use conditional instructions to light an LED when the
+ *      light level rises above the bright threshold and drops below the dark
+ *      threshold set in your program. Can you think of a reason why two 
+ *      different light thresholds would be better than one? What other types
+ *      of electronic devices or circuits work this way?
  * 
  * 3.   Create a program that produces a PWM output proportional to an analog
  *      input, or a program that creates a tone having a pitch proportional
  *      to an analog input value.
  * 
- * 4.   If you have an oscilloscope available, investigate how fast you get the
- *      serial output to transmit. Try setting the bit delays inside the serial
- *      write function to 1 microsecond of delay, instead of 104 and 103. Does
+ * 4.   If you have an oscilloscope available, investigate how fast you can get
+ *      the serial output function to transmit data. Try setting the bit delays
+ *      inside the serial write function to 1 microsecond of delay, instead of
+ *      104 and 103 as used in the current function, and try the program. Does
  *      it work the way it should? Is each bit 1us long? What do you think is
  *      happening?
  * 
- * 5.   Creating a function to transmit serial data is relatively straight-
- *      forward. Receiving serial data reliably is similar, but should take
- *      into account slight timing differences between the transmitter and 
- *      receiver. Think about how you would create a function to receive serial
- *      data. How could you ensure that the data is received correctly even if
- *      there are slight timing differences between the transmitting and
- *      receiving devices? Create the pseudocode or a flowchart describing a
- *      serial receive function.
+ * 5.   Creating a serial data transmission function is relatively straight-
+ *      forward. Receiving serial data can be done in a very similar way.
+ *      Think about how you would create a function to receive serial data. How
+ *      could you ensure that the data is received correctly even if there are
+ *      slight clock timing differences between the microcontrollers in the
+ *      transmitting and receiving devices? Create the pseudocode or a flowchart
+ *      describing a serial receive function.
  * 
- * 6.   Transmitting serial data involves isolating each bit of a variable to
- *      be sent using bit-wise logical operators, and bit-shifting the remaining
- *      data from within a loop. Received serial data can be assembled into an
- *      8-bit variable using a similar technique. Try to create a function or
- *      just the main loop of code that would successively read serial data
- *      from an input pin and assemble the values into an 8-bit variable.
+ * 6.   In this program, transmitting serial data involves isolating one bit
+ *      of a variable using a bit-wise logical operator, and bit-shifting the
+ *      remaining data within a loop, and at the proper bit timing. Received
+ *      serial data bits can be re-assembled into an 8-bit variable using a
+ *      similar technique. Try to create a function or just the main loop of
+ *      code that successively reads serial data bits from an input pin and
+ *      assembles the values into an 8-bit variable.
  */
