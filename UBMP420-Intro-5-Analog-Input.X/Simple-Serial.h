@@ -1,25 +1,24 @@
 /*==============================================================================
- File: SimpleSerial.h
- Date: April 2, 2022
+ File:  SimpleSerial.h
+ Date:  May 16, 2023
  
  UBMP4 Simple serial output function prototypes
  
- Function prototypes for RS-232 style serial output -- useful for debugging
- programs using an oscilloscope with serial bus decoding. This example code
- demonstrates simple and minimal 9600 bps serial transmission.
+ Function prototypes for software functions to create RS-232 style serial output
+ which is useful for debugging programs using an oscilloscope with serial bus
+ decoding or a serial terminal program.
 ==============================================================================*/
 
 /** ** *
  * Function: void H1_serial_config(void)
  * 
- * Configure H1 for serial output and set output pin high for idle state.
+ * Configure H1 for serial output and set the output pin high (idle state).
  */
 void H1_serial_config(void);
 
 /**
  * Function: void H1_serial_write(unsigned char)
  * 
- * Write one byte of 9600,8,N,1 serial data (9600bps, 8 bits, no parity, and 1
- * stop bit) to H1.
+ * Write one byte of serial data out to header H1.
  */
 void H1_serial_write(unsigned char);
